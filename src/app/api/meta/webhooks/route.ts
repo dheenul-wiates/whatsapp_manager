@@ -19,6 +19,7 @@ type WebhookChange = {
 type WebhookBody = {
   object?: string
   entry?: Array<{
+    id?: string // WhatsApp Business Account ID
     changes?: WebhookChange[]
   }>
 }
@@ -48,7 +49,7 @@ function normalizeLocale(locale: string) {
   return locale.replace("-", "_")
 }
 
-async function handleTemplateStatusUpdate(change: WebhookChange) {
+async function handleTemplateStatusUpdate(change: WebhookChange, wabaId?: string) {
   const value = change.value
   const name = value?.message_template_name || value?.template_name
   const language =
@@ -61,9 +62,25 @@ async function handleTemplateStatusUpdate(change: WebhookChange) {
 
   const normalizedLanguage = normalizeLocale(language)
 
+  // Resolve client by WABA ID to prevent cross-tenant updates
+  let clientId: string | undefined
+  if (wabaId) {
+    const client = await prisma.client.findFirst({
+      where: { whatsappBusinessAccountId: wabaId },
+      select: { id: true },
+    })
+    clientId = client?.id
+  }
+
+  if (wabaId && !clientId) {
+    console.warn(`[Webhook] Received template update for unknown WABA ID: ${wabaId}`)
+    return false
+  }
+
   const result = await prisma.template.updateMany({
     where: {
       name,
+      ...(clientId && { clientId }),
       OR: [
         { language },
         { language: normalizedLanguage },
@@ -114,7 +131,7 @@ export async function POST(request: Request) {
   for (const entry of body.entry || []) {
     for (const change of entry.changes || []) {
       if (change.field !== "message_template_status_update") continue
-      if (await handleTemplateStatusUpdate(change)) updated++
+      if (await handleTemplateStatusUpdate(change, entry.id)) updated++
     }
   }
 
@@ -124,3 +141,4 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ received: true, updated })
 }
+

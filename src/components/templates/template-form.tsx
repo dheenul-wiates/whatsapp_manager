@@ -147,7 +147,6 @@ export function TemplateForm({ initialData, onSubmit, onSaveDraft, isEditing }: 
         // Clear variables
         setValue("bodySamples", ["123456"], { shouldValidate: true })
       }
-      setButtonSectionType("NONE")
       replaceButtons([])
     }
   }, [categoryValue, setValue, getValues, replaceButtons])
@@ -255,7 +254,10 @@ export function TemplateForm({ initialData, onSubmit, onSaveDraft, isEditing }: 
                 <Select
                   value={categoryValue}
                   onValueChange={(val) => {
-                    if (val) setValue("category", val as TemplateCategory, { shouldValidate: true })
+                    if (val) {
+                      setValue("category", val as TemplateCategory, { shouldValidate: true })
+                      if (val === "AUTHENTICATION") setButtonSectionType("NONE")
+                    }
                   }}
                   disabled={!isEditing}
                 >
@@ -407,7 +409,7 @@ export function TemplateForm({ initialData, onSubmit, onSaveDraft, isEditing }: 
 
             {isAuth && (
               <p className="text-[12px] text-amber-600 bg-amber-50 rounded-lg p-3 font-medium text-center">
-                Authentication templates automatically include a mandatory "Copy code" button.
+                Authentication templates automatically include a mandatory &quot;Copy code&quot; button.
               </p>
             )}
 

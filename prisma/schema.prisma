@@ -12,13 +12,88 @@ datasource db {
 
 model Template {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  clientId    String   @db.ObjectId
+  client      Client   @relation(fields: [clientId], references: [id])
   name        String
-  category    String   // MARKETING, UTILITY, AUTHENTICATION
+  category    String // MARKETING, UTILITY, AUTHENTICATION
   language    String
-  status      String   // APPROVED, PENDING, REJECTED, DRAFT
+  status      String // APPROVED, PENDING, REJECTED, DRAFT
   body        String
-  bodySamples Json?    // Array of sample strings for body variables {{1}}, {{2}}, ...
-  buttons     Json?    // Array of button objects (QUICK_REPLY | URL | PHONE_NUMBER)
+  bodySamples Json? // Array of sample strings for body variables {{1}}, {{2}}, ...
+  buttons     Json? // Array of button objects (QUICK_REPLY | URL | PHONE_NUMBER)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Client {
+  id                         String    @id @default(auto()) @map("_id") @db.ObjectId
+  email                      String    @unique
+  name                       String?
+  businessName               String
+  phone                      String?
+  plan                       String?
+  status                     String    @default("INVITED")
+  businessLegalName          String?
+  businessWebsite            String?
+  businessEmail              String?
+  businessAddress            String?
+  country                    String?
+  businessCategory           String?
+  metaBusinessId             String?
+  whatsappBusinessAccountId  String?
+  phoneNumberId              String?
+  webhookVerifyToken         String?
+  whatsappAccessTokenSecret  String?
+  businessVerificationStatus String    @default("NOT_STARTED")
+  whatsappSetupStatus        String    @default("NOT_STARTED")
+  notes                      String?
+  onboardedAt                DateTime?
+  suspendedAt                DateTime?
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+
+  accessKeys ClientAccessKey[]
+  users      ClientUser[]
+  templates  Template[]
+}
+
+model ClientAccessKey {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  clientId  String    @db.ObjectId
+  client    Client    @relation(fields: [clientId], references: [id])
+  keyHash   String
+  status    String    @default("ACTIVE")
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model ClientUser {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  clientId     String   @db.ObjectId
+  client       Client   @relation(fields: [clientId], references: [id])
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AdminUser {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  actorType  String
+  actorId    String?
+  action     String
+  targetType String
+  targetId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
 }

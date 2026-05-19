@@ -9,8 +9,11 @@ import {
   Megaphone,
   Users,
   Settings,
+  LogOut,
+  ClipboardCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { logoutClient } from "@/server/actions/client-auth"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -18,6 +21,7 @@ const navigation = [
   { name: "Templates", href: "/templates", icon: MessageSquare },
   { name: "Campaigns", href: "/campaigns", icon: Megaphone },
   { name: "Contacts", href: "/contacts", icon: Users },
+  { name: "Onboarding", href: "/onboarding", icon: ClipboardCheck },
 ]
 
 const bottomNavigation = [{ name: "Settings", href: "/settings", icon: Settings }]
@@ -108,6 +112,15 @@ export function Sidebar() {
             </Link>
           )
         })}
+        <form action={logoutClient} className="mt-1">
+          <button
+            type="submit"
+            className="relative flex w-full items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-[13px] font-medium text-[#606770] transition-colors duration-150 hover:bg-zinc-50 hover:text-foreground"
+          >
+            <LogOut className="h-[15px] w-[15px] shrink-0 text-[#9EA3AC]" strokeWidth={1.9} />
+            Log out
+          </button>
+        </form>
       </div>
     </aside>
   )

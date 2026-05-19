@@ -13,7 +13,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-import { SidebarLayout } from "@/components/layout/sidebar-layout";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
@@ -32,9 +31,7 @@ export default function RootLayout({
       className={`${montserrat.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <SidebarLayout>
-          {children}
-        </SidebarLayout>
+        {children}
         <Toaster />
       </body>
     </html>

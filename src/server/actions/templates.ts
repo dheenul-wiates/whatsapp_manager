@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache"
 import type { Prisma } from "@prisma/client"
 import prisma from "@/lib/db"
+import { requireClientUser } from "@/lib/auth/client"
+import { decryptSecret } from "@/lib/token-encryption"
 
 const META_GRAPH_API_VERSION = process.env.WHATSAPP_GRAPH_API_VERSION || "v23.0"
 
@@ -57,6 +59,22 @@ type MetaButtonsComponent = {
 
 type MetaComponent = MetaBodyComponent | MetaButtonsComponent
 
+type MetaAuthBodyComponent = {
+  type: "BODY"
+  add_security_recommendation: boolean
+}
+
+type MetaAuthButtonsComponent = {
+  type: "BUTTONS"
+  buttons: Array<{
+    type: "OTP"
+    otp_type: "COPY_CODE"
+    text: string
+  }>
+}
+
+type MetaPayloadComponent = MetaComponent | MetaAuthBodyComponent | MetaAuthButtonsComponent
+
 type MetaTemplate = {
   name: string
   language: string
@@ -109,7 +127,7 @@ function toMetaButton(btn: TemplateButtonInput): MetaButton {
   return { type: "PHONE_NUMBER", text: btn.text, phone_number: btn.phone_number }
 }
 
-function buildMetaComponents(category: string, body: string, bodySamples?: string[], buttons?: TemplateButtonInput[]) {
+function buildMetaComponents(category: string, body: string, bodySamples?: string[], buttons?: TemplateButtonInput[]): MetaPayloadComponent[] {
   // Meta enforces a strict, pre-defined format for AUTHENTICATION templates.
   // Custom text in the BODY and custom buttons are NOT allowed.
   if (category === "AUTHENTICATION") {
@@ -128,7 +146,7 @@ function buildMetaComponents(category: string, body: string, bodySamples?: strin
           },
         ],
       },
-    ] as any[] // using 'any' here since our simple MetaComponent types above don't include these specialized OTP fields
+    ]
   }
 
   const bodyComponent: MetaBodyComponent = { type: "BODY", text: body }
@@ -148,13 +166,22 @@ function buildMetaComponents(category: string, body: string, bodySamples?: strin
   return components
 }
 
-async function submitTemplatePayload(data: TemplateInput) {
-  const token = process.env.WHATSAPP_API_TOKEN
-  const wabaId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
+async function getClientMetaCredentials() {
+  const user = await requireClientUser({ requireActive: true })
+  const token = user.client.whatsappAccessTokenSecret
+    ? decryptSecret(user.client.whatsappAccessTokenSecret)
+    : process.env.WHATSAPP_API_TOKEN
+  const wabaId = user.client.whatsappBusinessAccountId || process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
 
   if (!token || !wabaId) {
-    throw new Error("Missing WhatsApp API credentials. Configure WHATSAPP_API_TOKEN and WHATSAPP_BUSINESS_ACCOUNT_ID.")
+    throw new Error("Missing WhatsApp API credentials. Complete WhatsApp setup before submitting templates.")
   }
+
+  return { user, token, wabaId }
+}
+
+async function submitTemplatePayload(data: TemplateInput) {
+  const { token, wabaId } = await getClientMetaCredentials()
 
   console.log(`[DEBUG] submitTemplatePayload using token: ${token.substring(0, 10)}...${token.slice(-5)} for WABA: ${wabaId}`);
   const response = await fetch(
@@ -209,7 +236,10 @@ export async function getTemplates(
   page?: number,
   pageSize?: number
 ) {
-  const where: Prisma.TemplateWhereInput = {}
+  const user = await requireClientUser({ requireActive: true })
+  const where: Prisma.TemplateWhereInput = {
+    clientId: user.clientId,
+  }
 
   if (search) {
     where.name = { contains: search }
@@ -251,12 +281,14 @@ export async function getTemplates(
 }
 
 export async function getTemplate(id: string) {
-  return prisma.template.findUnique({
-    where: { id },
+  const user = await requireClientUser({ requireActive: true })
+  return prisma.template.findFirst({
+    where: { id, clientId: user.clientId },
   })
 }
 
 export async function createTemplate(data: TemplateInput) {
+  const user = await requireClientUser({ requireActive: true })
   let status: string
 
   try {
@@ -267,6 +299,7 @@ export async function createTemplate(data: TemplateInput) {
 
   const template = await prisma.template.create({
     data: {
+      clientId: user.clientId,
       name: data.name,
       category: data.category,
       language: data.language,
@@ -282,9 +315,11 @@ export async function createTemplate(data: TemplateInput) {
 }
 
 export async function createDraftTemplate(data: TemplateInput) {
+  const user = await requireClientUser({ requireActive: true })
   // Create template with DRAFT status WITHOUT Meta API submission
   const template = await prisma.template.create({
     data: {
+      clientId: user.clientId,
       name: data.name,
       category: data.category,
       language: data.language,
@@ -313,8 +348,9 @@ export async function updateTemplate(
     status?: string
   }
 ) {
+  const user = await requireClientUser({ requireActive: true })
   // Validate template exists and is editable
-  const existing = await prisma.template.findUnique({ where: { id } })
+  const existing = await prisma.template.findFirst({ where: { id, clientId: user.clientId } })
 
   if (!existing) {
     throw new Error("Template not found")
@@ -346,7 +382,8 @@ export async function updateTemplate(
 }
 
 export async function submitTemplateForReview(id: string) {
-  const template = await prisma.template.findUnique({ where: { id } })
+  const user = await requireClientUser({ requireActive: true })
+  const template = await prisma.template.findFirst({ where: { id, clientId: user.clientId } })
   if (!template) throw new Error("Template not found")
   if (template.status !== "DRAFT") throw new Error("Only draft templates can be submitted for review")
 
@@ -370,11 +407,14 @@ export async function submitTemplateForReview(id: string) {
 }
 
 export async function deleteTemplate(id: string) {
-  const template = await prisma.template.findUnique({ where: { id } })
+  const user = await requireClientUser({ requireActive: true })
+  const template = await prisma.template.findFirst({ where: { id, clientId: user.clientId } })
   if (!template) return
 
-  const token = process.env.WHATSAPP_API_TOKEN
-  const wabaId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
+  const token = user.client.whatsappAccessTokenSecret
+    ? decryptSecret(user.client.whatsappAccessTokenSecret)
+    : process.env.WHATSAPP_API_TOKEN
+  const wabaId = user.client.whatsappBusinessAccountId || process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
 
   if (token && wabaId) {
     try {
@@ -407,11 +447,14 @@ export async function deleteTemplate(id: string) {
 }
 
 export async function syncWithMeta() {
-  const token = process.env.WHATSAPP_API_TOKEN
-  const wabaId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
+  const user = await requireClientUser({ requireActive: true })
+  const token = user.client.whatsappAccessTokenSecret
+    ? decryptSecret(user.client.whatsappAccessTokenSecret)
+    : process.env.WHATSAPP_API_TOKEN
+  const wabaId = user.client.whatsappBusinessAccountId || process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
 
   if (!token || !wabaId) {
-    return { success: false, error: "Missing WhatsApp API credentials in .env" }
+    return { success: false, error: "Missing WhatsApp API credentials. Complete WhatsApp setup first." }
   }
 
   try {
@@ -467,6 +510,7 @@ export async function syncWithMeta() {
         // Find existing template by name and language to prevent duplicates
         const existing = await prisma.template.findFirst({
           where: {
+            clientId: user.clientId,
             name: metaTpl.name,
             language: metaTpl.language,
           },
@@ -488,6 +532,7 @@ export async function syncWithMeta() {
           // Create it locally if it exists on Meta but not locally
           await prisma.template.create({
             data: {
+              clientId: user.clientId,
               name: metaTpl.name,
               language: metaTpl.language,
               category: metaTpl.category,

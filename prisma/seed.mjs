@@ -1,62 +1,59 @@
+import "dotenv/config"
 import { PrismaClient } from "@prisma/client"
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3"
+import { createHmac } from "crypto"
 
-const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" })
-const prisma = new PrismaClient({ adapter })
+const prisma = new PrismaClient()
+
+function hashAccessKey(accessKey) {
+  const pepper = process.env.ACCESS_KEY_PEPPER || "development-access-key-pepper"
+  return createHmac("sha256", pepper)
+    .update(accessKey.trim().toUpperCase().replace(/\s+/g, ""))
+    .digest("base64url")
+}
 
 async function main() {
-  await prisma.template.deleteMany()
+  const seedEmail = process.env.SEED_CLIENT_EMAIL
+  const seedBusinessName = process.env.SEED_CLIENT_BUSINESS_NAME || "Demo Business"
+  const seedAccessKey = process.env.SEED_CLIENT_ACCESS_KEY
 
-  const templates = [
-    {
-      name: "welcome_message",
-      category: "MARKETING",
-      language: "en_US",
-      status: "APPROVED",
-      body: "Welcome to our platform, {{1}}! We are excited to have you on board.",
-    },
-    {
-      name: "order_confirmation",
-      category: "UTILITY",
-      language: "en_US",
-      status: "APPROVED",
-      body: "Your order {{1}} has been confirmed. Total: {{2}}.",
-    },
-    {
-      name: "otp_code",
-      category: "AUTHENTICATION",
-      language: "en_US",
-      status: "APPROVED",
-      body: "Your verification code is {{1}}. Do not share this with anyone.",
-    },
-    {
-      name: "spring_sale_promo",
-      category: "MARKETING",
-      language: "en_US",
-      status: "PENDING",
-      body: "Spring sale is here! Get {{1}}% off on all items using code {{2}}.",
-    },
-    {
-      name: "support_ticket_closed",
-      category: "UTILITY",
-      language: "es_ES",
-      status: "REJECTED",
-      body: "Tu ticket {{1}} ha sido cerrado. Gracias por contactarnos.",
-    },
-    {
-      name: "draft_campaign",
-      category: "MARKETING",
-      language: "en_US",
-      status: "DRAFT",
-      body: "Check out our latest news: {{1}}",
-    }
-  ]
-
-  for (const t of templates) {
-    await prisma.template.create({ data: t })
+  if (!seedEmail || !seedAccessKey) {
+    console.log("Skipped client seed. Set SEED_CLIENT_EMAIL and SEED_CLIENT_ACCESS_KEY to create an invited client.")
+    return
   }
 
-  console.log("Database seeded!")
+  const client = await prisma.client.upsert({
+    where: { email: seedEmail.toLowerCase() },
+    update: {
+      businessName: seedBusinessName,
+      status: "INVITED",
+    },
+    create: {
+      email: seedEmail.toLowerCase(),
+      businessName: seedBusinessName,
+      status: "INVITED",
+    },
+  })
+
+  await prisma.clientAccessKey.updateMany({
+    where: {
+      clientId: client.id,
+      status: "ACTIVE",
+    },
+    data: {
+      status: "REVOKED",
+    },
+  })
+
+  await prisma.clientAccessKey.create({
+    data: {
+      clientId: client.id,
+      keyHash: hashAccessKey(seedAccessKey),
+      status: "ACTIVE",
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+    },
+  })
+
+  console.log(`Seeded invited client ${seedEmail}. Use the provided SEED_CLIENT_ACCESS_KEY on /signup.`)
 }
 
 main()
