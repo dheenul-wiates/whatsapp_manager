@@ -1,0 +1,24 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Template {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  category    String   // MARKETING, UTILITY, AUTHENTICATION
+  language    String
+  status      String   // APPROVED, PENDING, REJECTED, DRAFT
+  body        String
+  bodySamples Json?    // Array of sample strings for body variables {{1}}, {{2}}, ...
+  buttons     Json?    // Array of button objects (QUICK_REPLY | URL | PHONE_NUMBER)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
