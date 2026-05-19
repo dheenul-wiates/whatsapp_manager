@@ -153,16 +153,11 @@ export function TemplateForm({ initialData, onSubmit, onSaveDraft, isEditing }: 
   }, [categoryValue, setValue, getValues, replaceButtons])
 
   let bodyPlaceholder = "Start typing your message..."
-  let bodyHint = "Use {{1}}, {{2}} for dynamic values."
   
   if (categoryValue === "MARKETING") {
-    bodyPlaceholder = "Hi {{1}}, our Summer Sale starts now! Enjoy 20% off all items using code {{2}}."
-    bodyHint = "Use for promotions or newsletters. Meta may reject overly spammy language."
+    bodyPlaceholder = "Hi {{1}}, our Summer Sale starts now! Enjoy 20% off all items using code *{{2}}*."
   } else if (categoryValue === "UTILITY") {
-    bodyPlaceholder = "Hi {{1}}, your order {{2}} has shipped! It will arrive on {{3}}."
-    bodyHint = "Use for transactional updates. Must relate to an existing user transaction."
-  } else if (categoryValue === "AUTHENTICATION") {
-    bodyHint = "Meta enforces a strict, standard format for authentication. Custom text is disabled."
+    bodyPlaceholder = "Hi {{1}}, your order *{{2}}* has shipped! It will arrive on {{3}}."
   }
 
   const isAuth = categoryValue === "AUTHENTICATION"
@@ -337,9 +332,27 @@ export function TemplateForm({ initialData, onSubmit, onSaveDraft, isEditing }: 
               )}
             </div>
             <FieldError message={errors.body?.message} />
-            <p className="text-[12px] text-muted-foreground leading-relaxed">
-              {bodyHint}
-            </p>
+            
+            {isAuth ? (
+              <p className="text-[12px] text-muted-foreground leading-relaxed mt-2">
+                Meta enforces a strict, standard format for authentication. Custom text is disabled.
+              </p>
+            ) : (
+              <div className="bg-zinc-50 border border-zinc-100/80 rounded-xl p-3.5 mt-3 shadow-sm">
+                <p className="text-[12px] font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-blue-500" />
+                  Meta Message Formatting Rules
+                </p>
+                <ul className="text-[11.5px] text-muted-foreground space-y-1.5 list-disc pl-4 marker:text-zinc-300">
+                  <li>Variables must be sequential (e.g., <code className="text-zinc-600 bg-white px-1 py-px rounded border border-zinc-100">{"{{1}}"}</code>, <code className="text-zinc-600 bg-white px-1 py-px rounded border border-zinc-100">{"{{2}}"}</code>)</li>
+                  <li>Messages cannot start or end with a variable.</li>
+                  <li>Variables cannot be placed directly next to each other.</li>
+                  <li>
+                    <strong>Tip:</strong> Wrap important text or variables in asterisks for bolding (e.g., *<code className="text-zinc-600 bg-white px-1 py-px rounded border border-zinc-100">{"{{1}}"}</code>*).
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
         </Section>
 
