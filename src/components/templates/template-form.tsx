@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useMemo, useState } from "react"
+import { useRef, useMemo, useState, useEffect } from "react"
 import { useForm, useFieldArray, useWatch } from "react-hook-form"
 import type { FieldErrors } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -138,6 +138,34 @@ export function TemplateForm({ initialData, onSubmit, onSaveDraft, isEditing }: 
     const matches = [...bodyValue.matchAll(/\{\{(\d+)\}\}/g)]
     return [...new Set(matches.map((m) => parseInt(m[1])))].sort((a, b) => a - b)
   }, [bodyValue])
+
+  useEffect(() => {
+    if (categoryValue === "AUTHENTICATION") {
+      const authBody = "Your code is {{1}}.\n\nFor your security, do not share this code."
+      if (getValues("body") !== authBody) {
+        setValue("body", authBody, { shouldValidate: true })
+        // Clear variables
+        setValue("bodySamples", ["123456"], { shouldValidate: true })
+      }
+      setButtonSectionType("NONE")
+      replaceButtons([])
+    }
+  }, [categoryValue, setValue, getValues, replaceButtons])
+
+  let bodyPlaceholder = "Start typing your message..."
+  let bodyHint = "Use {{1}}, {{2}} for dynamic values."
+  
+  if (categoryValue === "MARKETING") {
+    bodyPlaceholder = "Hi {{1}}, our Summer Sale starts now! Enjoy 20% off all items using code {{2}}."
+    bodyHint = "Use for promotions or newsletters. Meta may reject overly spammy language."
+  } else if (categoryValue === "UTILITY") {
+    bodyPlaceholder = "Hi {{1}}, your order {{2}} has shipped! It will arrive on {{3}}."
+    bodyHint = "Use for transactional updates. Must relate to an existing user transaction."
+  } else if (categoryValue === "AUTHENTICATION") {
+    bodyHint = "Meta enforces a strict, standard format for authentication. Custom text is disabled."
+  }
+
+  const isAuth = categoryValue === "AUTHENTICATION"
 
   const insertVariable = () => {
     const textarea = textareaRef.current
@@ -284,10 +312,11 @@ export function TemplateForm({ initialData, onSubmit, onSaveDraft, isEditing }: 
           <div className="space-y-3">
             <div className="relative">
               <Textarea
-                placeholder="Hi {{1}}, your order {{2}} is confirmed and on its way!"
+                placeholder={bodyPlaceholder}
+                disabled={isAuth}
                 className={`min-h-[148px] resize-y text-[13px] pr-3 pb-10 ${
                   errors.body ? "border-destructive focus-visible:ring-destructive" : ""
-                }`}
+                } ${isAuth ? "bg-zinc-100 text-zinc-500 cursor-not-allowed" : ""}`}
                 aria-invalid={!!errors.body}
                 {...bodyRegisterProps}
                 ref={(el) => {
@@ -296,21 +325,20 @@ export function TemplateForm({ initialData, onSubmit, onSaveDraft, isEditing }: 
                 }}
               />
               {/* Add variable button — sits inside textarea bottom */}
-              <button
-                type="button"
-                onClick={insertVariable}
-                className="absolute bottom-2.5 left-3 flex items-center gap-1.5 text-[11px] font-medium text-primary hover:text-primary/80 bg-primary/8 hover:bg-primary/12 px-2.5 py-1 rounded-md transition-colors"
-              >
-                <Hash className="w-3 h-3" />
-                Add Variable
-              </button>
+              {!isAuth && (
+                <button
+                  type="button"
+                  onClick={insertVariable}
+                  className="absolute bottom-2.5 left-3 flex items-center gap-1.5 text-[11px] font-medium text-primary hover:text-primary/80 bg-primary/8 hover:bg-primary/12 px-2.5 py-1 rounded-md transition-colors"
+                >
+                  <Hash className="w-3 h-3" />
+                  Add Variable
+                </button>
+              )}
             </div>
             <FieldError message={errors.body?.message} />
             <p className="text-[12px] text-muted-foreground leading-relaxed">
-              Use{" "}
-              <code className="bg-muted border border-border/60 px-1 py-px rounded text-[11px] font-mono">{"{{1}}"}</code>,{" "}
-              <code className="bg-muted border border-border/60 px-1 py-px rounded text-[11px] font-mono">{"{{2}}"}</code>{" "}
-              for personalised dynamic values.
+              {bodyHint}
             </p>
           </div>
         </Section>
@@ -345,7 +373,7 @@ export function TemplateForm({ initialData, onSubmit, onSaveDraft, isEditing }: 
 
         {/* Section 4 — Buttons */}
         <Section step={sectionStep.buttons} title="Interactive Buttons">
-          <div className="space-y-4">
+          <div className={`space-y-4 ${isAuth ? "opacity-50 pointer-events-none" : ""}`}>
             {/* Type tabs */}
             <div className="flex rounded-xl border border-zinc-200 bg-zinc-50 p-1 gap-1">
               {(["NONE", "QUICK_REPLY", "CALL_TO_ACTION"] as ButtonSectionType[]).map((type) => (
@@ -364,7 +392,13 @@ export function TemplateForm({ initialData, onSubmit, onSaveDraft, isEditing }: 
               ))}
             </div>
 
-            {buttonSectionType === "NONE" && (
+            {isAuth && (
+              <p className="text-[12px] text-amber-600 bg-amber-50 rounded-lg p-3 font-medium text-center">
+                Authentication templates automatically include a mandatory "Copy code" button.
+              </p>
+            )}
+
+            {buttonSectionType === "NONE" && !isAuth && (
               <p className="text-[12px] text-muted-foreground italic text-center py-2">
                 No buttons — message only.
               </p>
