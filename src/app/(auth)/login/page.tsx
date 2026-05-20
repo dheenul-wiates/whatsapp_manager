@@ -1,5 +1,6 @@
+import Image from "next/image"
 import Link from "next/link"
-import { MessageSquare, ShieldCheck } from "lucide-react"
+import { ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -23,14 +24,10 @@ export default async function LoginPage({
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-[420px] rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-[0_10px_30px_rgba(17,24,39,0.06)]">
-        <div className="mb-7 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#25D366]">
-            <MessageSquare className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-[20px] font-semibold leading-tight">Sign in to your account</h1>
-            <p className="text-[13px] text-muted-foreground">Access the WhatsApp Business dashboard.</p>
-          </div>
+        <div className="mb-7 flex flex-col items-center text-center">
+          <Image src="/images/full-icon.png" alt="Convora" width={180} height={60} className="object-contain mb-4" priority />
+          <h1 className="text-[20px] font-semibold leading-tight">Sign in to your account</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">Access the Convora dashboard.</p>
         </div>
 
         {errorMessage && (

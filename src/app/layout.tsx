@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "WhatsApp SaaS",
-  description: "Modern SaaS dashboard for WhatsApp templates",
+  title: "Convora",
+  description: "Quality conversations",
 };
 
 export default function RootLayout({

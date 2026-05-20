@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { MessageSquare, LogOut } from "lucide-react"
 import { requireClientUser } from "@/lib/auth/client"
 import { logoutClient } from "@/server/actions/client-auth"
@@ -17,12 +18,12 @@ export default async function OnboardingLayout({
           
           {/* Logo & Setup Status indicator */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#25D366] shrink-0">
-              <MessageSquare className="w-[14px] h-[14px] text-white" strokeWidth={2.5} />
+            <div className="flex items-center justify-center w-8 h-8 shrink-0">
+              <Image src="/images/light-icon.png" alt="Convora" width={32} height={32} className="object-contain drop-shadow-sm" />
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-              <p className="text-[13px] font-bold text-foreground leading-none tracking-tight">
-                WhatsApp Business Suite
+              <p className="text-[15px] font-bold text-foreground leading-none tracking-tight">
+                Convora
               </p>
               {user.client.status === "ACTIVE" ? (
                 <span className="inline-flex items-center gap-1 mt-0.5 sm:mt-0 text-[10px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-full select-none max-w-fit">

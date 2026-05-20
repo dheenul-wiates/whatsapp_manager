@@ -1,4 +1,4 @@
-# WhatsApp SaaS Manager
+# Convora - Quality Conversations
 
 A modern SaaS dashboard for managing WhatsApp Business API connections, templates, and campaigns. Built with Next.js, Prisma, MongoDB, and Tailwind CSS.
 

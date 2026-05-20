@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -36,15 +37,15 @@ export function Sidebar() {
     <aside className="flex h-full w-56 flex-col bg-white border-r border-border/60 shrink-0">
       {/* Logo */}
       <div className="flex items-center gap-3 h-[60px] px-5 border-b border-border/50">
-        <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#25D366] shrink-0">
-          <MessageSquare className="w-[14px] h-[14px] text-white" strokeWidth={2.5} />
+        <div className="flex items-center justify-center w-8 h-8 shrink-0">
+          <Image src="/images/light-icon.png" alt="Convora" width={32} height={32} className="object-contain" />
         </div>
-        <div>
-          <p className="text-[13px] font-semibold text-foreground leading-none tracking-tight">
-            WhatsApp
+        <div className="flex flex-col">
+          <p className="text-[14px] font-bold text-foreground leading-none tracking-tight">
+            Convora
           </p>
-          <p className="text-[10px] text-muted-foreground mt-[3px] tracking-wide">
-            Business Suite
+          <p className="text-[10px] font-medium text-muted-foreground mt-[3px] tracking-wide">
+            Quality conversations
           </p>
         </div>
       </div>
