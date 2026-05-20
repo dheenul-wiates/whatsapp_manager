@@ -101,13 +101,15 @@ export async function GET(request: Request) {
   const token = url.searchParams.get("hub.verify_token")
   const challenge = url.searchParams.get("hub.challenge")
 
-  if (
-    mode === "subscribe" &&
-    token &&
-    token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN &&
-    challenge
-  ) {
-    return new Response(challenge, { status: 200 })
+  if (mode === "subscribe" && token && challenge) {
+    // Check if any client has this verify token configured
+    const client = await prisma.client.findFirst({
+      where: { webhookVerifyToken: token },
+    })
+
+    if (client) {
+      return new Response(challenge, { status: 200 })
+    }
   }
 
   return new Response("Forbidden", { status: 403 })

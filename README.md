@@ -1,80 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WhatsApp SaaS Manager
 
-## Getting Started
+A modern SaaS dashboard for managing WhatsApp Business API connections, templates, and campaigns. Built with Next.js, Prisma, MongoDB, and Tailwind CSS.
 
-First, run the development server:
+## Required Environment Variables
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+To run this project, you need to set up the following environment variables. Create a `.env` file in the root directory and add:
+
+```env
+# Database Configuration (MongoDB)
+DATABASE_URL="mongodb+srv://<user>:<password>@<cluster>.mongodb.net/<dbname>?retryWrites=true&w=majority"
+
+# Admin Panel Configuration
+ADMIN_EMAIL="admin@yourdomain.com"
+ADMIN_PASSWORD="SecurePassword123"
+
+# Security & Session Secrets (Generate strong random strings for these)
+ADMIN_SESSION_SECRET="your_admin_session_secret"
+CLIENT_SESSION_SECRET="your_client_session_secret"
+ACCESS_KEY_PEPPER="your_encryption_pepper_secret"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local Development Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Install Dependencies**
+   ```bash
+   npm install
+   # or yarn install / pnpm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Set up Environment Variables**
+   Create a `.env` file and populate it with the required variables listed above.
 
-## Learn More
+3. **Initialize Database**
+   Push the Prisma schema to your MongoDB database:
+   ```bash
+   npx prisma db push
+   ```
+   Generate the Prisma client:
+   ```bash
+   npx prisma generate
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. **Seed Initial Data**
+   Seed the database with the initial required data (if any):
+   ```bash
+   npm run seed
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment Steps (Vercel)
 
-## Deploy on Vercel
+The easiest way to deploy this Next.js app is using [Vercel](https://vercel.com).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Push your code to a Git provider** (GitHub, GitLab, or Bitbucket).
+2. **Import Project into Vercel:**
+   - Go to your Vercel dashboard and click **Add New... > Project**.
+   - Import your repository.
+3. **Configure Environment Variables:**
+   - In the Vercel deployment settings, add all the environment variables listed in the `Required Environment Variables` section above.
+4. **Deploy:**
+   - Click **Deploy**. Vercel will automatically run `npm run build` and `npx prisma generate` (ensure your `build` script in `package.json` includes `prisma generate` if needed, or Vercel will handle it).
+5. **Database Webhooks:**
+   - Once deployed, copy your production domain URL and configure the WhatsApp Webhooks in your Meta App Dashboard to point to `https://your-domain.com/api/meta/webhooks`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tech Stack
 
-# WhatsApp SaaS — Templates Module Demo
-
-This project is a modern SaaS dashboard demo inspired by:
-
-- Meta Developer Portal
-- Stripe Dashboard
-- Linear
-
-Current scope:
-
-- Templates CRUD module
-- Local SQLite database
-- Prisma ORM
-- Responsive SaaS UI
-
----
-
-# Stack
-
-- Next.js
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
-- Prisma
-- SQLite
-
----
-
-# Current Features
-
-- Templates listing
-- Create template
-- Edit template
-- Delete template
-- Search & filter
-- Responsive layout
-
----
-
-# Development Goal
-
-Build a clean and scalable foundation for a future WhatsApp SaaS platform.
-# whatsapp_manager
+- **Framework:** Next.js (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS & shadcn/ui
+- **Database ORM:** Prisma
+- **Database:** MongoDB

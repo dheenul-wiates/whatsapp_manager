@@ -168,14 +168,13 @@ function buildMetaComponents(category: string, body: string, bodySamples?: strin
 
 async function getClientMetaCredentials() {
   const user = await requireClientUser({ requireActive: true })
-  const token = user.client.whatsappAccessTokenSecret
-    ? decryptSecret(user.client.whatsappAccessTokenSecret)
-    : process.env.WHATSAPP_API_TOKEN
-  const wabaId = user.client.whatsappBusinessAccountId || process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
-
-  if (!token || !wabaId) {
+  
+  if (!user.client.whatsappAccessTokenSecret || !user.client.whatsappBusinessAccountId) {
     throw new Error("Missing WhatsApp API credentials. Complete WhatsApp setup before submitting templates.")
   }
+
+  const token = decryptSecret(user.client.whatsappAccessTokenSecret)
+  const wabaId = user.client.whatsappBusinessAccountId
 
   return { user, token, wabaId }
 }
@@ -411,10 +410,10 @@ export async function deleteTemplate(id: string) {
   const template = await prisma.template.findFirst({ where: { id, clientId: user.clientId } })
   if (!template) return
 
-  const token = user.client.whatsappAccessTokenSecret
-    ? decryptSecret(user.client.whatsappAccessTokenSecret)
-    : process.env.WHATSAPP_API_TOKEN
-  const wabaId = user.client.whatsappBusinessAccountId || process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
+  if (!user.client.whatsappAccessTokenSecret || !user.client.whatsappBusinessAccountId) return
+
+  const token = decryptSecret(user.client.whatsappAccessTokenSecret)
+  const wabaId = user.client.whatsappBusinessAccountId
 
   if (token && wabaId) {
     try {
@@ -448,14 +447,12 @@ export async function deleteTemplate(id: string) {
 
 export async function syncWithMeta() {
   const user = await requireClientUser({ requireActive: true })
-  const token = user.client.whatsappAccessTokenSecret
-    ? decryptSecret(user.client.whatsappAccessTokenSecret)
-    : process.env.WHATSAPP_API_TOKEN
-  const wabaId = user.client.whatsappBusinessAccountId || process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
-
-  if (!token || !wabaId) {
+  if (!user.client.whatsappAccessTokenSecret || !user.client.whatsappBusinessAccountId) {
     return { success: false, error: "Missing WhatsApp API credentials. Complete WhatsApp setup first." }
   }
+
+  const token = decryptSecret(user.client.whatsappAccessTokenSecret)
+  const wabaId = user.client.whatsappBusinessAccountId
 
   try {
     let allMetaTemplates: MetaTemplate[] = []
