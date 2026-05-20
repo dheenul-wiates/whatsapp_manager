@@ -222,7 +222,7 @@ export async function getAdminDashboardStats() {
       prisma.client.count({ where: { status: "SUSPENDED" } }),
       prisma.client.findMany({
         orderBy: { createdAt: "desc" },
-        take: 10,
+        take: 6,
         include: {
           accessKeys: {
             where: { status: "ACTIVE" },
@@ -233,7 +233,7 @@ export async function getAdminDashboardStats() {
       }),
       prisma.auditLog.findMany({
         orderBy: { createdAt: "desc" },
-        take: 10,
+        take: 6,
       }),
     ])
 
@@ -243,4 +243,13 @@ export async function getAdminDashboardStats() {
   })
 
   return { total, invited, active, suspended, expiredKeys, recentClients, recentAudit }
+}
+
+export async function listAuditLogs(limit = 50) {
+  await requireAdmin()
+
+  return prisma.auditLog.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  })
 }

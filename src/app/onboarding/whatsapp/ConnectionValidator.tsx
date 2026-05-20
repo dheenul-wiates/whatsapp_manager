@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { ShieldCheck, ShieldAlert, KeyRound, RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react"
 import { validateMetaConnection } from "@/server/actions/meta-validation"
@@ -9,14 +9,15 @@ import { Button } from "@/components/ui/button"
 export function ConnectionValidator({
   initialStatus,
   hasToken,
-}: {
+}: Readonly<{
   initialStatus: string
   hasToken: boolean
-}) {
+}>) {
   const [status, setStatus] = useState(initialStatus)
   const [isValidating, setIsValidating] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [autoValidationAttempted, setAutoValidationAttempted] = useState(false)
 
   async function handleValidate() {
     if (!hasToken) {
@@ -47,6 +48,16 @@ export function ConnectionValidator({
       setIsValidating(false)
     }
   }
+
+  useEffect(() => {
+    if (!hasToken || status === "CONNECTED" || autoValidationAttempted) {
+      return
+    }
+
+    setAutoValidationAttempted(true)
+    void handleValidate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasToken, status, autoValidationAttempted])
 
   return (
     <div className="mt-5 space-y-4 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-5">
@@ -127,17 +138,19 @@ export function ConnectionValidator({
         </div>
       )}
 
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          onClick={handleValidate}
-          disabled={!hasToken || isValidating}
-          className="h-9 gap-2 bg-[#111827] text-white hover:bg-[#1F2937] transition-all"
-        >
-          <RefreshCw className={`h-4 w-4 ${isValidating ? "animate-spin" : ""}`} />
-          {isValidating ? "Verifying with Meta..." : "Test & Validate Connection"}
-        </Button>
-      </div>
+      {status === "FAILED" && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            onClick={handleValidate}
+            disabled={!hasToken || isValidating}
+            className="h-9 gap-2 bg-[#111827] text-white hover:bg-[#1F2937] transition-all"
+          >
+            <RefreshCw className={`h-4 w-4 ${isValidating ? "animate-spin" : ""}`} />
+            {isValidating ? "Verifying with Meta..." : "Test & Validate Connection"}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

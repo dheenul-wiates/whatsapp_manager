@@ -24,10 +24,17 @@ export default async function OnboardingLayout({
               <p className="text-[13px] font-bold text-foreground leading-none tracking-tight">
                 WhatsApp Business Suite
               </p>
-              <span className="inline-flex items-center gap-1 mt-0.5 sm:mt-0 text-[10px] font-semibold text-[#128C7E] bg-[#E9F8EF] px-1.5 py-0.5 rounded-full select-none max-w-fit">
-                <span className="w-1 h-1 rounded-full bg-[#25D366] animate-pulse" />
-                Setup Mode
-              </span>
+              {user.client.status === "ACTIVE" ? (
+                <span className="inline-flex items-center gap-1 mt-0.5 sm:mt-0 text-[10px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-full select-none max-w-fit">
+                  <span className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />
+                  Edit Profile
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 mt-0.5 sm:mt-0 text-[10px] font-semibold text-[#128C7E] bg-[#E9F8EF] px-1.5 py-0.5 rounded-full select-none max-w-fit">
+                  <span className="w-1 h-1 rounded-full bg-[#25D366] animate-pulse" />
+                  Setup Mode
+                </span>
+              )}
             </div>
           </div>
 
@@ -35,7 +42,9 @@ export default async function OnboardingLayout({
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-xs font-semibold text-foreground leading-none">{user.email}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Workspace Setup</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {user.client.status === "ACTIVE" ? "Workspace Edit" : "Workspace Setup"}
+              </p>
             </div>
             <div className="h-6 w-px bg-zinc-200 hidden sm:block" />
             <form action={logoutClient}>

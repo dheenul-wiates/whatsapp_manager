@@ -32,6 +32,20 @@ export async function saveBusinessDetails(formData: FormData) {
     redirect("/onboarding?step=1&error=required")
   }
 
+  // Basic email validation
+  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRe.test(businessEmail)) {
+    redirect("/onboarding?step=1&error=invalid_email")
+  }
+
+  // Phone number should be digits only and local part should be <= 10
+  if (phoneNumber) {
+    const digits = phoneNumber.replace(/\D/g, "")
+    if (digits.length > 10) {
+      redirect("/onboarding?step=1&error=invalid_phone")
+    }
+  }
+
   const existingClient = await prisma.client.findUnique({
     where: { id: user.clientId },
     select: { businessVerificationStatus: true },
@@ -71,6 +85,129 @@ export async function saveBusinessDetails(formData: FormData) {
 
   revalidatePath("/onboarding")
   redirect("/onboarding?step=2")
+}
+
+export async function clearBusinessDetails() {
+  const user = await requireClientUser()
+
+  await prisma.client.update({
+    where: { id: user.clientId },
+    data: {
+      businessLegalName: null,
+      businessName: null,
+      businessWebsite: null,
+      businessEmail: null,
+      phone: null,
+      businessAddress: null,
+      country: null,
+      businessCategory: null,
+      metaBusinessId: null,
+      businessVerificationStatus: "NOT_STARTED",
+    },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      actorType: "CLIENT",
+      actorId: user.id,
+      action: "BUSINESS_DETAILS_CLEARED",
+      targetType: "CLIENT",
+      targetId: user.clientId,
+    },
+  })
+
+  revalidatePath("/onboarding")
+  redirect("/onboarding?step=1")
+}
+
+export async function clearWhatsappDetails() {
+  const user = await requireClientUser()
+
+  await prisma.client.update({
+    where: { id: user.clientId },
+    data: {
+      whatsappBusinessAccountId: null,
+      phoneNumberId: null,
+      webhookVerifyToken: null,
+      whatsappAccessTokenSecret: null,
+      whatsappSetupStatus: "NOT_STARTED",
+    },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      actorType: "CLIENT",
+      actorId: user.id,
+      action: "WHATSAPP_DETAILS_CLEARED",
+      targetType: "CLIENT",
+      targetId: user.clientId,
+    },
+  })
+
+  revalidatePath("/onboarding")
+  redirect("/onboarding?step=2")
+}
+
+export async function clearValidationStep() {
+  const user = await requireClientUser()
+
+  await prisma.client.update({
+    where: { id: user.clientId },
+    data: {
+      whatsappSetupStatus: "NOT_STARTED",
+    },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      actorType: "CLIENT",
+      actorId: user.id,
+      action: "VALIDATION_CLEARED",
+      targetType: "CLIENT",
+      targetId: user.clientId,
+    },
+  })
+
+  revalidatePath("/onboarding")
+  redirect("/onboarding?step=3")
+}
+
+export async function clearAllOnboarding() {
+  const user = await requireClientUser()
+
+  await prisma.client.update({
+    where: { id: user.clientId },
+    data: {
+      businessLegalName: null,
+      businessName: null,
+      businessWebsite: null,
+      businessEmail: null,
+      phone: null,
+      businessAddress: null,
+      country: null,
+      businessCategory: null,
+      metaBusinessId: null,
+      businessVerificationStatus: "NOT_STARTED",
+      whatsappBusinessAccountId: null,
+      phoneNumberId: null,
+      webhookVerifyToken: null,
+      whatsappAccessTokenSecret: null,
+      whatsappSetupStatus: "NOT_STARTED",
+    },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      actorType: "CLIENT",
+      actorId: user.id,
+      action: "ONBOARDING_CLEARED",
+      targetType: "CLIENT",
+      targetId: user.clientId,
+    },
+  })
+
+  revalidatePath("/onboarding")
+  redirect("/onboarding")
 }
 
 export async function saveWhatsappDetails(formData: FormData) {

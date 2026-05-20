@@ -24,7 +24,7 @@ const navigation = [
   { name: "Onboarding", href: "/onboarding", icon: ClipboardCheck },
 ]
 
-const bottomNavigation = [{ name: "Settings", href: "/settings", icon: Settings }]
+const bottomNavigation = [{ name: "Business Settings", href: "/settings", icon: Settings }]
 
 export function Sidebar() {
   const pathname = usePathname()

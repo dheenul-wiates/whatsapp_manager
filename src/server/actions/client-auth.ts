@@ -124,9 +124,16 @@ export async function completeClientSignup(formData: FormData) {
   const phoneNumber = readString(formData, "phone")
   const phone = combinePhoneNumber(phoneCode, phoneNumber)
 
+  const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/
+
   if (!name || password.length < 8 || password !== confirmPassword) {
     console.log("[completeClientSignup] Input validation failed, redirecting to step account error")
     redirect("/signup?step=account&error=account")
+  }
+
+  if (!passwordPattern.test(password)) {
+    console.log("[completeClientSignup] Password regex validation failed")
+    redirect("/signup?step=account&error=password")
   }
 
   const accessKey = await prisma.clientAccessKey.findFirst({

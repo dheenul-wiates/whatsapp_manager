@@ -94,6 +94,10 @@ function timeAgo(date: Date) {
 export default async function AdminDashboardPage() {
   await requireAdmin()
   const stats = await getAdminDashboardStats()
+  const recentClients = stats.recentClients.slice(0, 5)
+  const recentAudit = stats.recentAudit.slice(0, 5)
+  const hasMoreClients = stats.recentClients.length > 5
+  const hasMoreActivity = stats.recentAudit.length > 5
 
   return (
     <div className="p-8">
@@ -156,12 +160,14 @@ export default async function AdminDashboardPage() {
             <h2 className="text-sm font-semibold text-[#111827]">
               Recent clients
             </h2>
-            <Link
-              href="/admin/clients"
-              className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold transition-colors"
-            >
-              View all
-            </Link>
+            {hasMoreClients && (
+              <Link
+                href="/admin/clients"
+                className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold transition-colors"
+              >
+                View all
+              </Link>
+            )}
           </div>
           <div className="divide-y divide-[#F3F4F6]">
             {stats.recentClients.length === 0 && (
@@ -169,7 +175,7 @@ export default async function AdminDashboardPage() {
                 No clients yet
               </p>
             )}
-            {stats.recentClients.map((client) => (
+            {recentClients.map((client) => (
               <Link
                 key={client.id}
                 href={`/admin/clients/${client.id}`}
@@ -192,11 +198,21 @@ export default async function AdminDashboardPage() {
 
         {/* Audit log */}
         <div className="bg-white rounded-xl border border-[#E5E7EB]">
-          <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center gap-2">
-            <Activity className="w-4 h-4 text-[#6B7280]" />
-            <h2 className="text-sm font-semibold text-[#111827]">
-              Recent activity
-            </h2>
+          <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-[#6B7280]" />
+              <h2 className="text-sm font-semibold text-[#111827]">
+                Recent activity
+              </h2>
+            </div>
+            {hasMoreActivity && (
+              <Link
+                href="/admin/activity"
+                className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold transition-colors"
+              >
+                View all
+              </Link>
+            )}
           </div>
           <div className="divide-y divide-[#F3F4F6]">
             {stats.recentAudit.length === 0 && (
@@ -204,7 +220,7 @@ export default async function AdminDashboardPage() {
                 No activity yet
               </p>
             )}
-            {stats.recentAudit.map((log) => (
+            {recentAudit.map((log) => (
               <div key={log.id} className="px-5 py-3 flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-[#E9F8EF] flex items-center justify-center mt-0.5 flex-shrink-0">
                   <Activity className="w-3 h-3 text-[#16A34A]" />

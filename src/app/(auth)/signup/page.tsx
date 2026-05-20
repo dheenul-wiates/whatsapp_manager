@@ -1,23 +1,26 @@
 import Link from "next/link"
-import { KeyRound, MessageSquare } from "lucide-react"
+import { HelpCircle, KeyRound, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { completeClientSignup, verifyClientInvite } from "@/server/actions/client-auth"
 import { PhoneInput } from "@/components/ui/phone-input"
 
+const SIGNUP_PASSWORD_PATTERN = String.raw`(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}`
+
 function getErrorMessage(error?: string) {
   if (error === "invite") return "The email or access key is invalid, expired, or already used."
   if (error === "expired") return "Your signup session expired. Verify your email and access key again."
   if (error === "account") return "Enter your name and matching passwords with at least 8 characters."
+  if (error === "password") return "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
   return null
 }
 
 export default async function SignupPage({
   searchParams,
-}: {
+}: Readonly<{
   searchParams: Promise<{ step?: string; error?: string }>
-}) {
+}>) {
   const resolved = await searchParams
   const accountStep = resolved?.step === "account"
   const errorMessage = getErrorMessage(resolved?.error)
@@ -56,8 +59,33 @@ export default async function SignupPage({
               <PhoneInput id="phone" name="phone" placeholder="98765 43210" className="h-10 bg-white" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} className="h-10 bg-white" />
+              <div className="flex items-center justify-between gap-2 text-sm">
+                <Label htmlFor="password">Password</Label>
+                <div className="group relative inline-flex items-center gap-1 text-[#6B7280]">
+                  <HelpCircle className="h-4 w-4" />
+                  <span className="text-xs text-[#6B7280]">Password rules</span>
+                  <div className="pointer-events-none absolute right-0 top-full z-10 mt-2 hidden w-[260px] rounded-xl border border-zinc-200 bg-white p-3 text-[12px] text-[#111827] shadow-lg group-hover:block">
+                    Use at least 8 characters, including:
+                    <ul className="mt-2 list-disc pl-4 space-y-1">
+                      <li>one uppercase letter</li>
+                      <li>one lowercase letter</li>
+                      <li>one number</li>
+                      <li>one special character like <code>!@#$%^&*</code></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                pattern={SIGNUP_PASSWORD_PATTERN}
+                title="Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character."
+                className="h-10 bg-white"
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="confirmPassword">Confirm password</Label>

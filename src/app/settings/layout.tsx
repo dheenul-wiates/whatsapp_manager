@@ -6,7 +6,7 @@ export default async function SettingsLayout({
 }: {
   children: React.ReactNode
 }) {
-  await requireClientUser()
+  const user = await requireClientUser()
 
-  return <SidebarLayout>{children}</SidebarLayout>
+  return <SidebarLayout user={user}>{children}</SidebarLayout>
 }

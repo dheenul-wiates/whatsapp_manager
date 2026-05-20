@@ -6,7 +6,7 @@ export default async function TemplatesLayout({
 }: {
   children: React.ReactNode
 }) {
-  await requireClientUser({ requireActive: true })
+  const user = await requireClientUser({ requireActive: true })
 
-  return <SidebarLayout>{children}</SidebarLayout>
+  return <SidebarLayout user={user}>{children}</SidebarLayout>
 }

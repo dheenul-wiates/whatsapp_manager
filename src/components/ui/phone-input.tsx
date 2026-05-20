@@ -21,7 +21,7 @@ export function PhoneInput({
   placeholder = "98765 43210",
   className,
   required = false,
-}: PhoneInputProps) {
+}: Readonly<PhoneInputProps>) {
   const { countryCode: initialCode, localNumber: initialLocal } = splitPhoneNumber(defaultValue)
 
   const [selectedCode, setSelectedCode] = useState(initialCode)
@@ -80,8 +80,14 @@ export function PhoneInput({
           name={name}
           type="tel"
           value={localNumber}
-          onChange={(e) => setLocalNumber(e.target.value)}
+          onChange={(e) => {
+            // Allow only digits and limit to 10 chars for local number
+            const onlyDigits = e.target.value.replace(/\D/g, "").slice(0, 10)
+            setLocalNumber(onlyDigits)
+          }}
           required={required}
+          inputMode="numeric"
+          pattern="[0-9]*"
           className="h-full w-full bg-transparent px-2.5 py-1 text-[#111827] placeholder:text-muted-foreground focus:outline-none text-base md:text-sm"
           placeholder={placeholder}
         />

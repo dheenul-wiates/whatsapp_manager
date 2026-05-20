@@ -1,11 +1,11 @@
 import Link from "next/link"
-import { Building2, CheckCircle2, Circle, KeyRound, MessageSquare, ShieldCheck, ArrowRight, HelpCircle, ArrowLeft } from "lucide-react"
+import { Building2, CheckCircle2, KeyRound, MessageSquare, ShieldCheck, ArrowRight, HelpCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { requireClientUser } from "@/lib/auth/client"
-import { saveBusinessDetails, saveWhatsappDetails, verifyMetaBusiness, finishOnboarding } from "@/server/actions/client-onboarding"
+import { saveBusinessDetails, saveWhatsappDetails, verifyMetaBusiness, finishOnboarding, clearBusinessDetails, clearWhatsappDetails, clearValidationStep, clearAllOnboarding } from "@/server/actions/client-onboarding"
 import { PhoneInput } from "@/components/ui/phone-input"
 import { COUNTRY_CODES } from "@/lib/country-codes"
 import { ConnectionValidator } from "./whatsapp/ConnectionValidator"
@@ -251,10 +251,15 @@ export default async function OnboardingPage({
         </div>
 
         {/* Compact Back navigation floating above form */}
-        <Link href="/onboarding" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-semibold mb-4 transition-colors max-w-fit select-none">
-          <ArrowLeft className="h-3.5 w-3.5 animate-in slide-in-from-right-1" />
-          <span>Back to checklist</span>
-        </Link>
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/onboarding" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-semibold transition-colors max-w-fit select-none">
+            <ArrowLeft className="h-3.5 w-3.5 animate-in slide-in-from-right-1" />
+            <span>Back to checklist</span>
+          </Link>
+          <form action={clearAllOnboarding} className="inline">
+            <button type="submit" className="text-xs text-red-600 hover:text-red-700 font-semibold transition-colors">Clear all data</button>
+          </form>
+        </div>
 
         {/* Modern Compact Single-Card Wizard */}
         <div className="w-full bg-white rounded-2xl border border-zinc-200/80 shadow-[0_12px_30px_rgba(0,0,0,0.03)]">
@@ -309,7 +314,7 @@ export default async function OnboardingPage({
                     <Label htmlFor="businessEmail" className="text-xs font-semibold text-[#374151]">
                       Business email <span className="text-red-500 font-bold">*</span>
                     </Label>
-                    <Input id="businessEmail" name="businessEmail" type="email" defaultValue={client.businessEmail || client.email} required />
+                    <Input id="businessEmail" name="businessEmail" type="email" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" defaultValue={client.businessEmail || client.email} required />
                   </div>
 
                   <div className="space-y-1">
@@ -381,12 +386,15 @@ export default async function OnboardingPage({
                 </div>
 
                 <div className="flex justify-end pt-4 border-t border-zinc-200/80">
-                  <Button 
-                    type="submit" 
-                    className="h-8 px-4 text-white font-bold text-xs rounded-lg bg-gradient-to-r from-[#128C7E] to-[#075E54] hover:shadow-lg hover:shadow-emerald-950/10 active:scale-95 border-0 transition-all cursor-pointer shadow-sm"
-                  >
-                    Save & Continue
-                  </Button>
+                    <div className="flex items-center gap-3">
+                      <button formAction={clearBusinessDetails} className="h-8 px-3 text-sm text-red-600 border border-red-100 rounded-lg hover:bg-red-50">Clear step</button>
+                      <Button 
+                        type="submit" 
+                        className="h-8 px-4 text-white font-bold text-xs rounded-lg bg-gradient-to-r from-[#128C7E] to-[#075E54] hover:shadow-lg hover:shadow-emerald-950/10 active:scale-95 border-0 transition-all cursor-pointer shadow-sm"
+                      >
+                        Save & Continue
+                      </Button>
+                    </div>
                 </div>
               </form>
             </>
@@ -530,12 +538,15 @@ export default async function OnboardingPage({
                 </div>
 
                 <div className="flex justify-end pt-4 border-t border-zinc-200/80">
-                  <Button 
-                    type="submit" 
-                    className="h-8 px-4 text-white font-bold text-xs rounded-lg bg-gradient-to-r from-[#128C7E] to-[#075E54] hover:shadow-lg active:scale-95 border-0 transition-all cursor-pointer shadow-sm"
-                  >
-                    Save & Continue
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    <button formAction={clearWhatsappDetails} className="h-8 px-3 text-sm text-red-600 border border-red-100 rounded-lg hover:bg-red-50">Clear step</button>
+                    <Button
+                      type="submit"
+                      className="h-8 px-4 text-white font-bold text-xs rounded-lg bg-gradient-to-r from-[#128C7E] to-[#075E54] hover:shadow-lg active:scale-95 border-0 transition-colors shadow-sm"
+                    >
+                      Save & Continue
+                    </Button>
+                  </div>
                 </div>
               </form>
             </>
@@ -599,12 +610,17 @@ export default async function OnboardingPage({
                       </Link>
                     )
                   ) : (
-                    <Button
-                      disabled
-                      className="h-8 px-4 text-zinc-400 bg-zinc-200 font-bold text-xs rounded-lg cursor-not-allowed"
-                    >
-                      Finish setup
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      <form action={clearValidationStep}>
+                        <button type="submit" className="h-8 px-3 text-sm text-red-600 border border-red-100 rounded-lg hover:bg-red-50">Clear step</button>
+                      </form>
+                      <Button
+                        disabled
+                        className="h-8 px-4 text-zinc-400 bg-zinc-200 font-bold text-xs rounded-lg cursor-not-allowed"
+                      >
+                        Finish setup
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>

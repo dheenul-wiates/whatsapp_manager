@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { LayoutDashboard, Users, LogOut } from "lucide-react"
+import { LayoutDashboard, Users, Activity, LogOut } from "lucide-react"
 
 export const metadata: Metadata = {
   title: {
@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 const navLinks = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/clients", label: "Clients", icon: Users, exact: false },
+  { href: "/admin/activity", label: "Activity", icon: Activity, exact: false },
 ]
 
 export default function AdminLayout({
